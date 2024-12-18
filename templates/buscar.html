@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Buscar Preço</h2>
+
+<!-- Formulário de busca -->
+<div class="search-container">
+    <form method="POST" id="search-form">
+        <input type="text" id="codigo" name="codigo" placeholder="Buscar por Código de Barras">
+        <div class="search-container">
+            <input type="text" id="descricao" name="descricao" placeholder="Buscar por Descrição" autocomplete="off">
+            <div id="suggestions" class="suggestions-box"></div>
+        </div>
+        <button type="submit" class="button">Buscar</button>
+    </form>
+</div>
+
+<!-- Resultado da Busca -->
+{% if resultado %}
+<div class="result-container">
+    <h3>Resultado da Busca</h3>
+    <table>
+        <tr>
+            <th>Código</th>
+            <th>Descrição</th>
+            <th>Preço</th>
+            <th>Imagem</th>
+        </tr>
+        {% for produto in resultado %}
+        <tr>
+            <td>{{ produto[1] }}</td>
+            <td>{{ produto[2] }}</td>
+            <td>R$ {{ produto[3] }}</td>
+            <td>
+                {% if produto[4] %}
+                <img src="{{ produto[4] }}" alt="Imagem do Produto" class="result-image">
+                {% else %}
+                Sem Imagem
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}
+
+<!-- JavaScript para sugestões dinâmicas -->
+<script>
+document.getElementById('descricao').addEventListener('input', function () {
+    const query = this.value;
+    const suggestionsBox = document.getElementById('suggestions');
+
+    if (query.length > 0) {
+        fetch(`/buscar-sugestao?query=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                suggestionsBox.innerHTML = "";
+                data.sugestoes.forEach(item => {
+                    const div = document.createElement('div');
+                    div.textContent = item;
+                    div.classList.add('suggestion-item');
+                    div.addEventListener('click', function () {
+                        document.getElementById('descricao').value = item;
+                        suggestionsBox.innerHTML = "";
+                    });
+                    suggestionsBox.appendChild(div);
+                });
+            });
+    } else {
+        suggestionsBox.innerHTML = "";
+    }
+});
+</script>
+{% endblock %}

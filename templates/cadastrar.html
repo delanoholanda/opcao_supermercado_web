@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Cadastrar Produto</h2>
+<form method="POST" enctype="multipart/form-data">
+    <label for="codigo">Código:</label>
+    <input type="text" name="codigo" required><br>
+
+    <label for="descricao">Descrição:</label>
+    <input type="text" name="descricao" required><br>
+
+    <label for="preco">Preço (R$):</label>
+    <input type="text" id="preco" name="preco" required><br>
+
+    <!-- <label for="imagem">Imagem:</label>
+    <input type="file" name="imagem" accept=".jpg, .jpeg, .png"><br> -->
+
+    <!-- Campo de imagem -->
+    <label for="imagem">Imagem:</label>
+    <input type="file" id="imagem" name="imagem" accept=".jpg, .jpeg, .png">
+
+    <!-- Espaço para mostrar a miniatura -->
+    <div id="image-preview" style="margin-top: 10px;">
+        <img id="preview-img" src="" alt="Pré-visualização da Imagem" style="max-width: 150px; display: none; border: 1px solid #ddd; border-radius: 5px;">
+    </div>
+
+
+    <button type="submit">Salvar Produto</button>
+</form>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.7-beta.19/jquery.inputmask.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $("#preco").inputmask('decimal', {
+            radixPoint: ",",
+            groupSeparator: ".",
+            digits: 2,
+            autoGroup: true,
+            prefix: "R$ ",
+            rightAlign: false
+        });
+    });
+
+    // Função para mostrar a miniatura da imagem
+    document.getElementById('imagem').addEventListener('change', function (event) {
+        const file = event.target.files[0]; // Obtém o arquivo selecionado
+        const previewImg = document.getElementById('preview-img'); // Elemento <img> para pré-visualização
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                previewImg.src = e.target.result; // Define o src da imagem como o conteúdo do arquivo
+                previewImg.style.display = 'block'; // Exibe a imagem
+            };
+
+            reader.readAsDataURL(file); // Converte o arquivo em uma URL de dados
+        } else {
+            previewImg.style.display = 'none'; // Esconde a imagem se nada for selecionado
+        }
+    });
+
+</script>
+{% endblock %}

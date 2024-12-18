@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="result-container">
+    <h3>Produtos Cadastrados</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th>Preço</th>
+                <th>Imagem</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for produto in produtos %}
+            <tr>
+                <td>{{ produto[1] }}</td>
+                <td>{{ produto[2] }}</td>
+                <td>R$ {{ produto[3] }}</td>
+                <td>
+                        {% if produto[4] %}
+                        <img src="{{ url_for('static', filename=produto[4].replace('static/', '')) }}" 
+                             alt="Imagem do Produto" class="result-image" style="max-width: 80px;">
+                        {% else %}
+                        <span>Sem Imagem</span>
+                        {% endif %}
+                </td>
+                <td class="actions">
+                    <a href="{{ url_for('editar_produto', codigo=produto[1]) }}" class="edit">Editar</a>
+                    <a href="/excluir/{{ produto[0] }}" class="delete" onclick="return confirm('Deseja realmente excluir este produto?');">Excluir</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

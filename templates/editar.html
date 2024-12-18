@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Editar Produto</h2>
+
+<form method="POST" enctype="multipart/form-data">
+    <label for="codigo">Código:</label>
+    <input type="text" id="codigo" name="codigo" value="{{ produto[0] }}" readonly>
+
+    <label for="descricao">Descrição:</label>
+    <input type="text" id="descricao" name="descricao" value="{{ produto[1] }}" required>
+
+    <label for="preco">Preço (R$):</label>
+    <input type="text" id="preco" name="preco" value="{{ produto[2] }}" required>
+
+    <label for="imagem">Imagem:</label>
+    <input type="file" id="imagem" name="imagem" onchange="previewImage(event)">
+
+    <div id="image-preview" style="margin-top: 10px;">
+        {% if produto[3] %}
+        <img id="preview" src="{{ url_for('static', filename=produto[3].split('static/')[1]) }}"
+            alt="Imagem Atual" style="max-width: 150px; border: 1px solid #ddd;">
+        {% else %}
+        <img id="preview" src="" alt="Nenhuma Imagem Selecionada" style="display:none; max-width: 150px;">
+        {% endif %}
+    </div>
+
+    <button type="submit" class="button">Atualizar Produto</button>
+</form>
+
+<script>
+    function previewImage(event) {
+        const input = event.target;  // Referência ao input de arquivo
+        const preview = document.getElementById('preview'); // Referência à imagem de pré-visualização
+    
+        // Verifica se há um arquivo selecionado
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+    
+            reader.onload = function (e) {
+                preview.src = e.target.result; // Atualiza a src da imagem com o conteúdo do arquivo
+                preview.style.display = "block"; // Garante que a imagem seja exibida
+            };
+    
+            reader.readAsDataURL(input.files[0]); // Lê o arquivo como uma URL de dados
+        } else {
+            preview.style.display = "none"; // Oculta a imagem se nenhum arquivo for selecionado
+            preview.src = "";
+        }
+    }
+    </script>
+    
+{% endblock %}

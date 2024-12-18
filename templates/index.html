@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="venda-container">
+    <!-- Seção superior com código e informações -->
+    <div class="venda-top">
+        <!-- <div class="logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo-img">
+        </div> -->
+        <h1>CAIXA ABERTO</h1>
+    </div>
+
+    <div class="conteudo-central">
+        <!-- Formulário de entrada -->
+        <div class="codigo-produto">
+            <form method="POST" id="form-adicionar">
+                <label for="codigo">Código de Barras:</label>
+                <input type="text" id="codigo" name="codigo" placeholder="Digite o código" required>
+                <label for="quantidade">Quantidade:</label>
+                <input type="number" id="quantidade" name="quantidade" value="1" min="1" required>
+                <button type="button" id="adicionar" class="botao-azul">Adicionar</button>
+            </form>            
+        </div>
+
+        <!-- Informações do produto atual -->
+        <div class="info-produto">
+            <div class="info-caixa">
+                <h3>Valor Unitário</h3>
+                <p id="valor-unitario">R$ 0.00</p>
+            </div>
+            <div class="info-caixa">
+                <h3>Total do Item</h3>
+                <p id="total-item">R$ 0.00</p>
+            </div>
+        </div>
+        
+
+        <!-- Imagem do último produto -->
+        <div class="produto-imagem">
+            <h3>Último Produto Adicionado</h3>
+            <img id="imagem-produto" src="{{ url_for('static', filename='uploads/sem_imagem.png') }}" alt="Imagem Produto" class="miniatura">
+        </div>        
+    </div>
+
+    <!-- Seção inferior com lista de produtos e resumo -->
+    <div class="venda-bottom">
+        <!-- Coluna lateral: Lista de produtos -->
+        <div class="lista-produtos">
+            <h3>Lista de Produtos</h3>
+            <table id="tabela-produtos">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Código</th>
+                        <th>Descrição</th>
+                        <th>Qtd</th>
+                        <th>Unitário</th>
+                        <th>Total</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in produtos %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ item.codigo }}</td>
+                        <td>{{ item.descricao }}</td>
+                        <td>{{ item.qtd }}</td>
+                        <td>R$ {{ "%.2f"|format(item.preco) }}</td>
+                        <td>R$ {{ "%.2f"|format(item.total) }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('remover_item', index=loop.index) }}">
+                                <button type="submit" class="botao-remover">X</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Subtotal e total -->
+        <div class="resumo-venda">
+            <h3>Resumo</h3>
+            <p><strong>Subtotal:</strong> <span id="subtotal">R$ 0.00</span></p>
+            <!-- <p><strong>Total Recebido:</strong> R$ 0.00</p> -->
+        </div>        
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Certifique-se de que o campo "codigo" existe
+        const codigoInput = document.getElementById("codigo");
+        if (codigoInput) {
+            codigoInput.focus();
+        }
+    });
+    
+    document.addEventListener("DOMContentLoaded", function () {
+        const codigoInput = document.getElementById("codigo");
+        const quantidadeInput = document.getElementById("quantidade");
+        const btnAdicionar = document.getElementById("adicionar");
+        const tabela = document.querySelector("#tabela-produtos tbody");
+        const subtotalElement = document.getElementById("subtotal");
+        const valorUnitarioElement = document.getElementById("valor-unitario");
+        const totalItemElement = document.getElementById("total-item");
+        const imagemProduto = document.getElementById("imagem-produto");
+
+        let subtotal = 0;
+        let contador = 0;
+
+        function adicionarProduto() {
+            const codigo = codigoInput.value.trim();
+            const quantidade = parseInt(quantidadeInput.value) || 1;
+
+            if (!codigo) return;
+
+            fetch(`/buscar-produto?codigo=${codigo}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.sucesso) {
+                        contador++;
+                        const { codigo, descricao, preco, imagem } = data.produto;
+                        const total = preco * quantidade;
+
+                        // Adicionar linha à tabela
+                        const row = tabela.insertRow();
+                        row.innerHTML = `
+                            <td>${contador}</td>
+                            <td>${codigo}</td>
+                            <td>${descricao}</td>
+                            <td>${quantidade}</td>
+                            <td>R$ ${preco.toFixed(2)}</td>
+                            <td>R$ ${total.toFixed(2)}</td>
+                            <td>
+                                <button class="btn-remover" onclick="removerProduto(this, ${total})">Remover</button>
+                            </td>
+                        `;
+
+                        // Atualizar valores
+                        subtotal += total;
+                        subtotalElement.textContent = `R$ ${subtotal.toFixed(2)}`;
+                        valorUnitarioElement.textContent = `R$ ${preco.toFixed(2)}`;
+                        totalItemElement.textContent = `R$ ${total.toFixed(2)}`;
+
+                        // Mostrar imagem do produto
+                        imagemProduto.src = imagem || "{{ url_for('static', filename='uploads/sem_imagem.png') }}";
+
+                        // Limpar campos
+                        codigoInput.value = "";
+                        quantidadeInput.value = 1;
+                    } else {
+                        alert("Produto não encontrado!");
+                    }
+                })
+                .catch(error => console.error("Erro ao buscar o produto:", error));
+                codigoInput.focus(); // Garante o foco no erro
+        }
+
+        window.removerProduto = function (btn, total) {
+            const row = btn.parentNode.parentNode;
+            row.remove();
+
+            subtotal -= total;
+            subtotalElement.textContent = `R$ ${subtotal.toFixed(2)}`;
+
+            // Focar no campo código após remover
+            codigoInput.focus(); // Garante o foco no erro
+        };
+
+        btnAdicionar.addEventListener("click", adicionarProduto);
+        codigoInput.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                adicionarProduto();
+            }
+        });
+        // Adiciona evento Enter ao campo de quantidade
+        quantidadeInput.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                adicionarProduto();
+            }
+        });
+    });
+
+
+
+    </script>
+{% endblock %}
